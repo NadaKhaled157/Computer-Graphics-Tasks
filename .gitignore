@@ -1,0 +1,9 @@
+﻿.vs/
+/Task1/OpenGL
+*.dll
+*.sln
+*.vcxproj
+*.filters
+*.user
+
+x64/

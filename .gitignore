@@ -1,5 +1,5 @@
 ﻿.vs/
-/Task1/OpenGL
+debug/
 *.dll
 *.sln
 *.vcxproj

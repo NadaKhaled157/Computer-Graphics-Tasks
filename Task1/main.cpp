@@ -160,8 +160,8 @@ void drawScene()
 	float scaleps = 0.8;
 	ph(Scale(40,60,scaleps));
 	float scaleCircle = 3.1;
-	drawCircle(Scale(35, 32.5, scaleCircle), 255, 69, 0); // Outer Circle (Orange)
-	drawCircle(Scale(35, 32.5, scaleCircle * 0.85), 0, 0, 0); // Inner Circle (Black)
+	drawCircle(Scale(35, 34, scaleCircle), 255, 69, 0); // Outer Circle (Orange)
+	drawCircle(Scale(35, 34, scaleCircle * 0.89), 0, 0, 0); // Inner Circle (Black)
 
 	float scaleTriangle = 4;
 	drawEquilateralTriangle(Scale(15, 30, scaleTriangle), 41, 174, 147);

@@ -13,10 +13,10 @@ void Ball::display()
 	// bound wall
 	glPushMatrix();
 	glBegin(GL_LINE_LOOP);
-	glVertex2f(minX, minY);
-	glVertex2f(minX, maxY);
-	glVertex2f(maxX, maxY);
-	glVertex2f(maxX, minY);
+	glVertex3f(minX, minY,0.0);
+	glVertex3f(minX, maxY,0.0);
+	glVertex3f(maxX, maxY,0.0);
+	glVertex3f(maxX, minY,0.0);
 	glEnd();
 	glPopMatrix();
 

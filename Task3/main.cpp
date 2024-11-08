@@ -123,17 +123,18 @@ void resize(int w, int h)
 
 void animation(int value)
 {
-    //if (forward)
-    //{
-    //    legAngle -= 5.0;
-    //}
-    //else
-    //{
-    //    legAngle += 5.0;
-    //}
+    if (forward)
+    {
+        legAngle -= 5.0;
+    }
+    else
+    {
+        legAngle += 5.0;
+    }
 
-    //if (legAngle >= 30.0) forward = 1;
-    //else if (legAngle <= -30.0) forward = 0;
+    if (legAngle >= 30.0) forward = 1;
+    else if (legAngle <= -30.0) forward = 0;
+
 	ball.update();
 
     glutPostRedisplay();

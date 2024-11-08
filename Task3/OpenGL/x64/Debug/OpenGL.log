@@ -1,0 +1,13 @@
+﻿  main.cpp
+D:\Computer-Graphics-Tasks\Task3\Ball.h(9,18): warning C4305: 'initializing': truncation from 'double' to 'float'
+  (compiling source file 'main.cpp')
+  
+D:\Computer-Graphics-Tasks\Task3\Ball.h(12,13): warning C4305: 'initializing': truncation from 'double' to 'float'
+  (compiling source file 'main.cpp')
+  
+D:\Computer-Graphics-Tasks\Task3\main.cpp(54,14): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+D:\Computer-Graphics-Tasks\Task3\main.cpp(65,14): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+D:\Computer-Graphics-Tasks\Task3\main.cpp(77,14): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+D:\Computer-Graphics-Tasks\Task3\main.cpp(88,14): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+  LINK : D:\Computer-Graphics-Tasks\Task3\x64\Debug\OpenGL.exe not found or not built by the last incremental link; performing full link
+  OpenGL.vcxproj -> D:\Computer-Graphics-Tasks\Task3\x64\Debug\OpenGL.exe

@@ -1,14 +1,15 @@
 #include "Ball.h"
-#include <glew.h>
-#include <freeglut.h>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
 #include <math.h>
 
 void Ball::display()
 {
     // head
+	glColor3f(1.0, 0.6, 0.0);
     glPushMatrix();
 	glTranslatef(posX, posY, 0.0);
-    glutWireSphere(1.5, 10, 10);
+    glutWireSphere(5.0, 20, 20);
     glPopMatrix();
 	// bound wall
 	glPushMatrix();
@@ -45,7 +46,7 @@ void Ball::update(void)
 		posY = posY - speedY;
 		dirAngle = -dirAngle;
 		speed -= 0.5;
-		
+
 	}
 	c = cos(dirAngle * Pi / 180);
 	s = sin(dirAngle * Pi / 180);

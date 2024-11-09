@@ -1,11 +1,11 @@
 #pragma once
 class Ball {
 public:
-	float posX = 300.0; // initial position
+	float posX = 250; // initial position
 	float posY = 170.0;
 	float radius = 1.5;
 	float dirAngle = 30;
-	float speed = 1.5;
+	float speed = 4;
 	float gravity = 9.8;
 	float maxY = 220.0;
 	float minY = 120.0;

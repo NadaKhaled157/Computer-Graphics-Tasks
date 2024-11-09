@@ -1,31 +1,38 @@
 #include "Ball.h"
-#include <GL/glew.h>
-#include <GL/freeglut.h>
+#include <glew.h>
+#include <freeglut.h>
 #include <math.h>
 
 void Ball::display()
 {
     // head
-	glColor3f(1.0, 0.6, 0.0);
+    glColor3f(1.0, 0.1, 0.0);
     glPushMatrix();
-	glTranslatef(posX, posY, 0.0);
-    glutWireSphere(5.0, 20, 20);
+    glTranslatef(posX, posY, 0.0);
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex3f(0.0, 0.0, 1.0); // center point
+    for (int i = 0; i <= 360; i += 10) {
+        float angle = i * Pi / 180;
+        float x = 5.0 * cos(angle);
+        float y = 5.0 * sin(angle);
+        glVertex3f(x, y, 0.0);
+    }
+    glEnd();
     glPopMatrix();
-	// bound wall
-	glPushMatrix();
-	glBegin(GL_LINE_LOOP);
-	glVertex3f(minX, minY,0.0);
-	glVertex3f(minX, maxY,0.0);
-	glVertex3f(maxX, maxY,0.0);
-	glVertex3f(maxX, minY,0.0);
-	glEnd();
-	glPopMatrix();
-
+    // bound wall
+    glPushMatrix();
+    glBegin(GL_LINE_LOOP);
+    glVertex3f(minX, minY, 0.0);
+    glVertex3f(minX, maxY, 0.0);
+    glVertex3f(maxX, maxY, 0.0);
+    glVertex3f(maxX, minY, 0.0);
+    glEnd();
+    glPopMatrix();
 }
 
 void Ball::update(void)
 {
-	float gravity = 0.08f;
+	float gravity = 0.1f;
 	while (dirAngle < 0)
 		dirAngle += 360;
 	while (dirAngle >= 360)

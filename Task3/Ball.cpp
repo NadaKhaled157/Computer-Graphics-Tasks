@@ -9,30 +9,22 @@ void Ball::display()
     glColor3f(1.0, 0.1, 0.0);
     glPushMatrix();
     glTranslatef(posX, posY, 0.0);
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex3f(0.0, 0.0, 1.0); // center point
-    for (int i = 0; i <= 360; i += 10) {
-        float angle = i * Pi / 180;
-        float x = 5.0 * cos(angle);
-        float y = 5.0 * sin(angle);
-        glVertex3f(x, y, 0.0);
-    }
-    glEnd();
+    glutSolidSphere(0.5, 20, 20);
     glPopMatrix();
-    // bound wall
-    glPushMatrix();
-    glBegin(GL_LINE_LOOP);
-    glVertex3f(minX, minY, 0.0);
-    glVertex3f(minX, maxY, 0.0);
-    glVertex3f(maxX, maxY, 0.0);
-    glVertex3f(maxX, minY, 0.0);
-    glEnd();
-    glPopMatrix();
+    //// bound wall
+    //glPushMatrix();
+    //glBegin(GL_LINE_LOOP);
+    //glVertex3f(minX, minY, 0.0);
+    //glVertex3f(minX, maxY, 0.0);
+    //glVertex3f(maxX, maxY, 0.0);
+    //glVertex3f(maxX, minY, 0.0);
+    //glEnd();
+    //glPopMatrix();
 }
 
 void Ball::update(void)
 {
-	float gravity = 0.1f;
+	float gravity = 0.06f;
 	while (dirAngle < 0)
 		dirAngle += 360;
 	while (dirAngle >= 360)
@@ -46,13 +38,13 @@ void Ball::update(void)
 	{
 		posX = posX - speedX;
 		dirAngle += 180 - 2 * dirAngle;
-		speed -= 0.5;
+		speed -= 0.2;
 	}
 	if (posY+speedY >= maxY || posY+speedY <= minY)
 	{
 		posY = posY - speedY;
 		dirAngle = -dirAngle;
-		speed -= 0.5;
+		speed -= 0.2;
 
 	}
 	c = cos(dirAngle * Pi / 180);

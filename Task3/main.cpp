@@ -5,7 +5,83 @@
 
 #include <glew.h>
 #include <freeglut.h>
-#include "Ball.h"
+class Ball {
+public:
+    float posX = 2;
+    float posY = -6.5;
+    float radius = 0.01;
+    float dirAngle = 30;
+    float speed = 0.8;
+    float gravity = 9.8;
+    float maxY = 10, minY = -10, maxX = 10, minX = -10;
+    int refreshRate = 30;
+    float Pi = 3.1415926;
+    bool isMoving = false;
+    bool shoot = false;
+    void display();
+    void update();
+};
+
+void Ball::display()
+{
+    // head
+    glColor3f(1.0, 0.1, 0.0);
+    glPushMatrix();
+    glTranslatef(posX, posY, 0.0);
+    glutSolidSphere(0.5, 20, 20);
+    glPopMatrix();
+    //// bound wall
+    //glPushMatrix();
+    //glBegin(GL_LINE_LOOP);
+    //glVertex3f(minX, minY, 0.0);
+    //glVertex3f(minX, maxY, 0.0);
+    //glVertex3f(maxX, maxY, 0.0);
+    //glVertex3f(maxX, minY, 0.0);
+    //glEnd();
+    //glPopMatrix();
+}
+
+void Ball::update(void)
+{
+    if (!shoot)
+        return;
+
+    float gravity = 0.06f;
+    while (dirAngle < 0)
+        dirAngle += 360;
+    while (dirAngle >= 360)
+        dirAngle -= 360;
+
+    float c = cos(dirAngle * Pi / 180);
+    float s = sin(dirAngle * Pi / 180);
+    float speedX = speed * c;
+    float speedY = speed * s - gravity;
+    if (posX + speedX >= maxX || posX + speedX <= minX)
+    {
+        posX = posX - speedX;
+        dirAngle += 180 - 2 * dirAngle;
+        speed -= 0.2;
+    }
+    if (posY + speedY >= maxY || posY + speedY <= minY)
+    {
+        posY = posY - speedY;
+        dirAngle = -dirAngle;
+        speed -= 0.2;
+
+    }
+    c = cos(dirAngle * Pi / 180);
+    s = sin(dirAngle * Pi / 180);
+    speedX = speed * c;
+    speedY = speed * s - gravity;
+    posX += speedX;
+    posY += speedY;
+    posY = fmaxf(minY, fminf(maxY, posY));
+    if (minY - posY < 1 && speed < 0.1)
+    {
+        speed = 0;
+    }
+    dirAngle = atan2(speedY, speedX) * 180 / Pi;
+}
 
 // angles to rotate the scene
 static float Xangle = 1.0, Yangle = 0.0, Zangle = 0.0;

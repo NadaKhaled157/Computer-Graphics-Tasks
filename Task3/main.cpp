@@ -15,7 +15,94 @@ static int forward = 0;
 
 static float legAngle = 0;
 static float handangle = 0;
+float y1LeftHand = -500;
+float y2LeftHand = -500;
+float y1RightHand = -500;
+float y2RightHand = -500;
+int leftHandState = 0;
+int rightHandState = 0;
+float rightArmAngle = 0.0;
+float leftArmAngle = 0.0;
+bool isRightArmRotating = false;
+bool isLeftArmRotating = false;
 Ball ball;
+void head() {
+    glBegin(GL_POLYGON);
+    glColor3f(0.0f, 0.0f, 0.0f);
+    float pi;
+    for (int i = 0; i <= 360; i++) {
+        pi = i * 3.14 / 180;
+        glVertex2f(160 * cos(pi), 160 * sin(pi));
+    }
+    glEnd();
+}
+
+void body() {
+    glBegin(GL_POLYGON);
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glVertex2i(-25, -150);
+    glVertex2i(25, -150);
+    glVertex2i(25, -250);
+    glVertex2i(25, -650);
+    glVertex2i(25, -800);
+    glVertex2i(-25, -800);
+    glVertex2i(-25, -650);
+    glVertex2i(-25, -250);
+    glEnd();
+}
+
+void handR() {
+    glPushMatrix();
+    glTranslatef(25, -250, 0);
+    glRotatef(rightArmAngle, 0, 0, 1);
+    glTranslatef(-(25), 250, 0);
+    glBegin(GL_POLYGON);
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glVertex2i(-25, -250);
+    glVertex2i(25, -250);
+    glVertex2i(285, y1RightHand);
+    glVertex2i(235, y2RightHand);
+    glEnd();
+    glPopMatrix();
+}
+
+void handL() {
+    glPushMatrix();
+    glTranslatef(-25, -250, 0);
+    glRotatef(leftArmAngle, 0.0, 0.0, 1.0);
+    glTranslatef(25, 250, 0);
+
+    glBegin(GL_POLYGON);
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glVertex2i(-25, -250);
+    glVertex2i(-75, -250);
+    glVertex2i(-285, y1LeftHand);
+    glVertex2i(-235, y2LeftHand);
+    glEnd();
+
+    glPopMatrix();
+}
+
+void legR() {
+    glBegin(GL_POLYGON);
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glVertex2i(-25, -800);
+    glVertex2i(25, -800);
+    glVertex2i(235, -1000);
+    glVertex2i(185, -1000);
+    glEnd();
+}
+
+void legL() {
+    glBegin(GL_POLYGON);
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glVertex2i(25, -800);
+    glVertex2i(-25, -800);
+    glVertex2i(-235, -1000);
+    glVertex2i(-185, -1000);
+    glEnd();
+}
+
 // Room setup function
 void roomSetup(float top_left_x, float top_left_y,
     float top_right_x, float top_right_y,
@@ -95,7 +182,27 @@ void Scene(void) {
     glRotatef(Yangle, 0.0, 1.0, 0.0);
     glRotatef(Xangle, 1.0, 0.0, 0.0);
 	roomSetup(-10, 10, 10, 10, 10, -10, -10, -10, 20, 20, 20);
+	glPushMatrix();
+    if (not ball.shoot){
+        glTranslatef(0.5, -5.5, 0.0);
+        glRotatef(-leftArmAngle, 0.0, 0.0, 1.0);
+        glTranslatef(-0.5, 5.5, 0.0);
+        //glTranslatef(2.0, -6.5, 0.0);
+    }
     ball.display();
+	glPopMatrix();
+	glPushMatrix();
+	glTranslatef(0.0, -4.0, 0.0);
+	//glTranslatef(ball.posX, ball.posY, 0.0);
+	glScalef(-0.006, 0.006, 1.0);
+	head();
+	body();
+	handR();
+	handL();
+	body();
+	legL();
+    legR();
+	glPopMatrix();
     glutSwapBuffers();
 }
 
@@ -114,7 +221,41 @@ void resize(int w, int h)
     glFrustum(-5.0, 5.0, -5.0, 5.0, 5.0, 100.0);
     glMatrixMode(GL_MODELVIEW);
 }
-
+void animateRightArm(int value) {
+    if (isRightArmRotating) {  // Only update if rotation is active
+        rightArmAngle += 5.0;
+        if (rightArmAngle >= 360.0) {
+            rightArmAngle -= 360.0;
+        }
+        glutPostRedisplay();  // Request display update
+        glutTimerFunc(16, animateRightArm, 0);  // Schedule next animation
+    }
+}
+void mouseClick(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        isRightArmRotating = !isRightArmRotating;  // Toggle right arm rotation
+        if (isRightArmRotating) {
+            glutTimerFunc(0, animateRightArm, 0);  // Start right arm animation if not already
+        }
+    }
+}
+void animateLeftArm(int value) {
+    if (ball.shoot)
+    {
+		isLeftArmRotating = false;
+		return;
+	}
+    if (isLeftArmRotating) {  // Only update if rotation is active
+        leftArmAngle -= 5.0;
+        if (leftArmAngle <= -400.0) {
+            ball.dirAngle = 50;
+			ball.shoot = true;
+			leftArmAngle = 0;
+        }
+        glutPostRedisplay();  // Request display update
+        glutTimerFunc(16, animateLeftArm, 0);  // Schedule next animation
+    }
+}
 
 void animation(int value)
 {
@@ -151,11 +292,12 @@ void keyInput(unsigned char key, int x, int y)
         {
             if (ball.speed == 0.0)
             {
-                //replay
-				ball.posX = 0.0;
-				ball.posY = 0.0;
-				ball.dirAngle = 30;
+				ball.posX = 2;
+				ball.posY = -6.5;
+				//ball.dirAngle = 30;
                 ball.speed = 0.8;
+				ball.shoot = false;
+				isLeftArmRotating = true;
             }
             animate = 0;
 			ball.isMoving = false;
@@ -166,6 +308,10 @@ void keyInput(unsigned char key, int x, int y)
             animation(1);
 			ball.isMoving = true;
 			ball.update();
+        }
+        isLeftArmRotating = !isLeftArmRotating;  // Toggle left arm rotation
+        if (isLeftArmRotating) {
+            glutTimerFunc(0, animateLeftArm, 0);  // Start left arm animation if not already
         }
         break;
 

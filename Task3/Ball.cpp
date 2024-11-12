@@ -24,6 +24,9 @@ void Ball::display()
 
 void Ball::update(void)
 {
+	if (!shoot)
+		return;
+
 	float gravity = 0.06f;
 	while (dirAngle < 0)
 		dirAngle += 360;
@@ -60,3 +63,5 @@ void Ball::update(void)
 	}
 	dirAngle = atan2(speedY, speedX) * 180 / Pi;
 }
+
+

@@ -1,105 +1,112 @@
-#include<GL/glut.h>
+#include <GL/glut.h>
+
+// Draw the coordinate axes
+void drawAxes() {
+	glBegin(GL_LINES);
+
+	// X axis - Red
+	glColor3f(1.0, 0.0, 0.0);
+	glVertex3f(-10.0, 0.0, 0.0);
+	glVertex3f(10.0, 0.0, 0.0);
+
+	// Y axis - Green
+	glColor3f(0.0, 1.0, 0.0);
+	glVertex3f(0.0, -10.0, 0.0);
+	glVertex3f(0.0, 10.0, 0.0);
+
+	// Z axis - Blue
+	glColor3f(0.0, 0.0, 1.0);
+	glVertex3f(0.0, 0.0, -10.0);
+	glVertex3f(0.0, 0.0, 10.0);
+
+	glEnd();
+}
+
+
 
 // draw the cube
 void drawCube() {
 	glBegin(GL_QUADS);
 
 	// front face
-	glColor3f(1.0, 0.0, 0.0); //red
+	glColor3f(1.0, 0.0, 0.0); // red
 	glVertex3f(-0.5, -0.5, 0.5);
 	glVertex3f(0.5, -0.5, 0.5);
 	glVertex3f(0.5, 0.5, 0.5);
 	glVertex3f(-0.5, 0.5, 0.5);
 
 	// back face
-	glColor3f(0.0, 1.0, 0.0); //green
+	glColor3f(0.0, 1.0, 0.0); // green
 	glVertex3f(-0.5, -0.5, -0.5);
 	glVertex3f(0.5, -0.5, -0.5);
 	glVertex3f(0.5, 0.5, -0.5);
 	glVertex3f(-0.5, 0.5, -0.5);
 
 	// left face
-	glColor3f(0.0, 0.0, 1.0); //blue
+	glColor3f(0.0, 0.0, 1.0); // blue
 	glVertex3f(-0.5, -0.5, -0.5);
 	glVertex3f(-0.5, -0.5, 0.5);
 	glVertex3f(-0.5, 0.5, 0.5);
 	glVertex3f(-0.5, 0.5, -0.5);
 
-	// rigth face
-	glColor3f(1, 1, 0); //yellow
+	// right face
+	glColor3f(1, 1, 0); // yellow
 	glVertex3f(0.5, -0.5, -0.5);
 	glVertex3f(0.5, -0.5, 0.5);
 	glVertex3f(0.5, 0.5, 0.5);
 	glVertex3f(0.5, 0.5, -0.5);
 
-
 	// top face
-	glColor3f(0, 1.0, 1.0); //cyan
+	glColor3f(0, 1.0, 1.0); // cyan
 	glVertex3f(-0.5, 0.5, -0.5);
 	glVertex3f(0.5, 0.5, -0.5);
 	glVertex3f(0.5, 0.5, 0.5);
 	glVertex3f(-0.5, 0.5, 0.5);
 
-
 	// bottom face
-	glColor3f(1, 0, 1); //magenta
+	glColor3f(1, 0, 1); // magenta
 	glVertex3f(-0.5, -0.5, -0.5);
 	glVertex3f(0.5, -0.5, -0.5);
 	glVertex3f(0.5, -0.5, 0.5);
 	glVertex3f(-0.5, -0.5, 0.5);
 
 	glEnd();
-
 }
-/////////////////////////////////////////////////////////////////////////////////////
 
-// First Transformation
-//Translation by 6 units in the +ve x direction, 
-// followed by reflection about the yz plane and then
-//anticlockwise rotation by 90° around the z - axis.
+//// Draw a small cube to represent the center point
+//void drawCenterMarker(float x, float y, float z) {
+//	glPushMatrix();
+//	glTranslatef(x, y, z);
+//	glScalef(0.1f, 0.1f, 0.1f);
+//	drawCube();
+//	glPopMatrix();
+//}
 
 void transformationSet1() {
 
+	glPushMatrix();
 	glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
 	glScalef(-1.0f, 1.0f, 1.0f);
 	glTranslatef(6.0f, 0.0f, 0.0f);
-
 	drawCube();
-
+	glPopMatrix();
 }
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Second Transformation
-//Translation by 3 units in the +ve x direction and 3 units in -ve z direction, 
-// followed by clockwise rotation by 180° about the y - axis.
-
 
 void transformationSet2() {
-	
-	glRotatef(180.0f, 0.0f, 1.0f, 1.0f);
+	glPushMatrix();
+	glRotatef(-180.0f, 0.0f, 1.0f, 0.0f);
 	glTranslatef(3.0f, 0.0f, -3.0f);
 	drawCube();
-
+	glPopMatrix();
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-//  Third Transformation
-//Translation by 3 units in the +ve x direction and 3 units in -ve y direction, 
-// followed by scaling around the center of the box by a factor of 3 in x and y directions.
 
 void transformationSet3() {
-
-	glScalef(3.0f, 3.0f, 1.0f);
+	glPushMatrix();
 	glTranslatef(3.0f, -3.0f, 0.0f);
+	glScalef(3.0f, 3.0f, 1.0f);
 	drawCube();
-
+	glPopMatrix();
 }
-
-
-/// /////////////////////////////////////////////////////////////////////
 
 void setup() {
 	glMatrixMode(GL_PROJECTION);
@@ -108,7 +115,6 @@ void setup() {
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-
 }
 
 void display() {
@@ -118,26 +124,22 @@ void display() {
 		0.0, 0.0, 0.0,   // Look-at point
 		0.0, 1.0, 0.0);  // Up direction
 
-	// original cube
+	// Draw coordinate axes
+	drawAxes();
+
+	// Original cube
 	drawCube();
 
-	// first transformation
-	glPushMatrix();
+	// First transformation
 	transformationSet1();
-	glPopMatrix();
 
-	// second transformation
-	glPushMatrix();
+	// Second transformation
 	transformationSet2();
-	glPopMatrix();
 
-	// third transformation
-	glPushMatrix();
+	// Third transformation
 	transformationSet3();
-	glPopMatrix();
 
 	glutSwapBuffers();
-
 }
 
 int main(int argc, char** argv) {
@@ -148,10 +150,7 @@ int main(int argc, char** argv) {
 	glEnable(GL_DEPTH_TEST);
 
 	setup();
-
 	glutDisplayFunc(display);
 	glutMainLoop();
 	return 0;
-
-
 }

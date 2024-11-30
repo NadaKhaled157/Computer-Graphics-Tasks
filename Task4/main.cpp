@@ -109,6 +109,101 @@ void Asteroid::draw()
 }
 
 Asteroid arrayAsteroids[ROWS][COLUMNS]; // Global array of asteroids.
+//class target:
+#include <cstdlib> // For random number generation.
+#include <ctime>   // For seeding the random number generator.
+
+class Target
+{
+public:
+	Target() : centerX(0), centerY(0), centerZ(0), radius(5.0f) {}
+	Target(float x, float y, float z, float r)
+		: centerX(x), centerY(y), centerZ(z), radius(r) {}
+
+	void draw()
+	{
+		glPushMatrix();
+		glTranslatef(centerX, centerY, centerZ); // Position the target.
+
+		// Draw concentric circles (bullseye).
+		drawCircle(radius, 255, 0, 0);   // Outer red circle.
+		drawCircle(radius * 0.75, 255, 255, 255); // White circle.
+		drawCircle(radius * 0.5, 255, 0, 0);   // Inner red circle.
+		drawCircle(radius * 0.25, 0, 0, 0);    // Black center.
+
+		glPopMatrix();
+	}
+
+	float getCenterX() const { return centerX; }
+	float getCenterY() const { return centerY; }
+	float getCenterZ() const { return centerZ; }
+
+private:
+	float centerX, centerY, centerZ, radius;
+
+	void drawCircle(float r, unsigned char red, unsigned char green, unsigned char blue)
+	{
+		glColor3ub(red, green, blue);
+		glBegin(GL_TRIANGLE_FAN);
+		glVertex3f(0.0f, 0.0f, 0.0f); // Center of the circle.
+		for (int i = 0; i <= 360; i++)
+		{
+			float theta = i * (M_PI / 180.0f); // Convert degrees to radians.
+			glVertex3f(r * cos(theta), r * sin(theta), 0.0f);
+		}
+		glEnd();
+	}
+};
+
+
+Target target;
+
+void initializeTarget()
+{
+	float x, y = 0.0f, z; // Position of the target.
+	float radius = 10.0f;  // Radius of the target.
+	bool isPositionValid;
+
+	do
+	{
+		isPositionValid = true;
+
+		// Randomly choose two adjacent columns in the final row for the target position.
+		int randomCol = rand() % (COLUMNS - 1); // Ensure there's space for adjacent columns.
+
+		// Determine the x and z position between these two columns in the final row.
+		float col1X = arrayAsteroids[ROWS - 1][randomCol].getCenterX();
+		float col2X = arrayAsteroids[ROWS - 1][randomCol + 1].getCenterX();
+		x = (col1X + col2X) / 2.0f; // Centered between the two chosen columns.
+		z = arrayAsteroids[ROWS - 1][randomCol].getCenterZ();
+
+		// Check for collisions with all asteroids in the final row.
+		for (int j = 0; j < COLUMNS && isPositionValid; j++)
+		{
+			float asteroidX = arrayAsteroids[ROWS - 1][j].getCenterX();
+			float asteroidZ = arrayAsteroids[ROWS - 1][j].getCenterZ();
+			float asteroidRadius = arrayAsteroids[ROWS - 1][j].getRadius();
+
+			if (asteroidRadius > 0.0f) // Only check existing asteroids.
+			{
+				// Calculate the distance between the target and the asteroid.
+				float dx = x - asteroidX;
+				float dz = z - asteroidZ;
+				float distance = sqrt(dx * dx + dz * dz);
+
+				// Check if the target collides with the asteroid.
+				if (distance < (radius + asteroidRadius))
+				{
+					isPositionValid = false; // Position is invalid, retry.
+				}
+			}
+		}
+
+	} while (!isPositionValid); // Repeat until a valid position is found.
+
+	// Set the global target object.
+	target = Target(x, y, z, radius);
+}
 
 // Routine to count the number of frames drawn every second.
 void frameCounter(int value)
@@ -190,6 +285,7 @@ void setup(void)
 					arrayAsteroids[i][j] = Asteroid(15 + 30.0 * (-COLUMNS / 2 + j), 0.0, -40.0 - 30.0 * i, 3.0,
 						rand() % 256, rand() % 256, rand() % 256);
 			}
+	initializeTarget();
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -263,6 +359,7 @@ void drawScene(void)
 	for (j = 0; j < COLUMNS; j++)
 		for (i = 0; i < ROWS; i++)
 			arrayAsteroids[i][j].draw();
+	target.draw();
 
 	// Draw spacecraft.
 	glPushMatrix();
@@ -309,6 +406,7 @@ void drawScene(void)
 	for (j = 0; j < COLUMNS; j++)
 		for (i = 0; i < ROWS; i++)
 			arrayAsteroids[i][j].draw();
+	target.draw();
 	// End right viewport.
 
 	glutSwapBuffers();

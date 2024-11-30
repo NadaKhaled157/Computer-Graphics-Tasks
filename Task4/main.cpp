@@ -53,62 +53,62 @@ void writeBitmapString(void* font, const char* string)
 }
 
 // Asteroid class.
-class Cube
+class Asteroid
 {
 public:
-	Cube();
-	Cube(float x, float y, float z, float size, unsigned char colorR,
+	Asteroid();
+	Asteroid(float x, float y, float z, float r, unsigned char colorR,
 		unsigned char colorG, unsigned char colorB);
 	float getCenterX() { return centerX; }
 	float getCenterY() { return centerY; }
 	float getCenterZ() { return centerZ; }
-	float getSize() { return size; }
+	float getRadius() { return radius; }
 	void draw();
 
 private:
-	float centerX, centerY, centerZ, size;
+	float centerX, centerY, centerZ, radius;
 	unsigned char color[3];
 };
 
-// Cube default constructor.
-Cube::Cube()
+// Asteroid default constructor.
+Asteroid::Asteroid()
 {
 	centerX = 0.0;
 	centerY = 0.0;
 	centerZ = 0.0;
-	size = 0.0; 
+	radius = 0.0; // Indicates no asteroid exists in the position.
 	color[0] = 0;
 	color[1] = 0;
 	color[2] = 0;
 }
 
-// Cube constructor.
-Cube::Cube(float x, float y, float z, float s, unsigned char colorR,
+// Asteroid constructor.
+Asteroid::Asteroid(float x, float y, float z, float r, unsigned char colorR,
 	unsigned char colorG, unsigned char colorB)
 {
 	centerX = x;
 	centerY = y;
 	centerZ = z;
-	size = s;
+	radius = r;
 	color[0] = colorR;
 	color[1] = colorG;
 	color[2] = colorB;
 }
 
-// Function to draw Cube.
-void Cube::draw()
+// Function to draw asteroid.
+void Asteroid::draw()
 {
-	if (size > 0.0) // If Cube exists.
+	if (radius > 0.0) // If asteroid exists.
 	{
 		glPushMatrix();
 		glTranslatef(centerX, centerY, centerZ);
 		glColor3ubv(color);
-		glutSolidCube(size);
+		glutWireSphere(radius, (int)radius * 6, (int)radius * 6);
 		glPopMatrix();
 	}
 }
 
-Cube arrayCubes[ROWS][COLUMNS]; // Global array of Cubes.
+Asteroid arrayAsteroids[ROWS][COLUMNS]; // Global array of asteroids.
 
 // Routine to count the number of frames drawn every second.
 void frameCounter(int value)
@@ -127,65 +127,67 @@ void setup(void)
 	spacecraft = glGenLists(1);
 	glNewList(spacecraft, GL_COMPILE);
 
-	glColor3f(1.0, 1.0, 1.0); //car color
+	glColor3f(0.9, 0.9, 0.9); //main car color
 	//main car body
 	glPushMatrix();
 	glRotatef(180.0, 0.0, 1.0, 0.0); // To make the spacecraft point down the $z$-axis initially.
-	glutSolidCube(5.0);
+	glutSolidCube(6);
 	glPopMatrix();
+
+	glColor3f(0.8, 0.8, 0.8); //front and back face color
 
 	//front of car
 	glPushMatrix();
-	glTranslatef(0.0, 0.0, -3.0);
-	glutSolidCube(4.0);
+	glTranslatef(0.0, 0.0, -4.5);
+	glutSolidCube(4.5);
 	glPopMatrix();
 
 	//back of car
 	glPushMatrix();
-	glTranslatef(0.0, 0.0, 3.0);
-	glutSolidCube(4.0);
+	glTranslatef(0.0, 0.0, 4.5);
+	glutSolidCube(4.5);
 	glPopMatrix();
 
-	glColor3f(0.5, 0.5, 0.5);
+	glColor3f(0.5, 0.5, 0.5); //wheel color
 
 	// 2 wheels on the right
 	glPushMatrix(); //front wjeel
-	glTranslatef(2.0, -3.0, 2.0);
-	glutSolidSphere(1.0, 10.0, 10.0);
+	glTranslatef(2.0, -2.5, 3.5);
+	glutSolidSphere(1.5, 10.0, 10.0);
 	glPopMatrix();
 
 	glPushMatrix(); //back wheel
-	glTranslatef(2.0, -3.0, -3.0);
-	glutSolidSphere(1.0, 10.0, 10.0);
+	glTranslatef(2.0, -2.5, -4.0);
+	glutSolidSphere(1.5, 10.0, 10.0);
 	glPopMatrix();
 
 	// 2 wheels on the left
 	glPushMatrix(); //front wheel
-	glTranslatef(-2.0, -3.0, 2.0);
-	glutSolidSphere(1.0, 10.0, 10.0);
+	glTranslatef(-2.0, -2.5, 3.5);
+	glutSolidSphere(1.5, 10.0, 10.0);
 	glPopMatrix();
 
 	glPushMatrix(); //back wheel
-	glTranslatef(-2.0, -3.0, -3.0);
-	glutSolidSphere(1.0, 10.0, 10.0);
+	glTranslatef(-2.0, -2.5, -4.0);
+	glutSolidSphere(1.5, 10.0, 10.0);
 	glPopMatrix();
 
 	glEndList();
 
-	// Initialize global arrayCubes.
+	// Initialize global arrayAsteroids.
 	for (j = 0; j < COLUMNS; j++)
 		for (i = 0; i < ROWS; i++)
 			if (rand() % 100 < FILL_PROBABILITY)
-				// If rand()%100 >= FILL_PROBABILITY the default constructor Cube remains in the slot 
-				// which indicates that there is no cube there because the default's size is 0.
+				// If rand()%100 >= FILL_PROBABILITY the default constructor asteroid remains in the slot 
+				// which indicates that there is no asteroid there because the default's radius is 0.
 			{
-				// Position the cubes depending on if there is an even or odd number of columns
-				// so that the spacecraft faces the middle of the cube field.
+				// Position the asteroids depending on if there is an even or odd number of columns
+				// so that the spacecraft faces the middle of the asteroid field.
 				if (COLUMNS % 2) // Odd number of columns.
-					arrayCubes[i][j] = Cube(30.0 * (-COLUMNS / 2 + j), 0.0, -40.0 - 30.0 * i, 3.0,
+					arrayAsteroids[i][j] = Asteroid(30.0 * (-COLUMNS / 2 + j), 0.0, -40.0 - 30.0 * i, 3.0,
 						rand() % 256, rand() % 256, rand() % 256);
 				else // Even number of columns.
-					arrayCubes[i][j] = Cube(15 + 30.0 * (-COLUMNS / 2 + j), 0.0, -40.0 - 30.0 * i, 3.0,
+					arrayAsteroids[i][j] = Asteroid(15 + 30.0 * (-COLUMNS / 2 + j), 0.0, -40.0 - 30.0 * i, 3.0,
 						rand() % 256, rand() % 256, rand() % 256);
 			}
 
@@ -203,21 +205,21 @@ int checkSpheresIntersection(float x1, float y1, float z1, float r1,
 	return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) + (z1 - z2) * (z1 - z2) <= (r1 + r2) * (r1 + r2));
 }
 
-// Function to check if the spacecraft collides with an cube when the center of the base
+// Function to check if the spacecraft collides with an asteroid when the center of the base
 // of the craft is at (x, 0, z) and it is aligned at an angle a to to the -z direction.
 // Collision detection is approximate as instead of the spacecraft we use a bounding sphere.
 int asteroidCraftCollision(float x, float z, float a)
 {
 	int i, j;
 
-	// Check for collision with each cube.
+	// Check for collision with each asteroid.
 	for (j = 0; j < COLUMNS; j++)
 		for (i = 0; i < ROWS; i++)
-			if (arrayCubes[i][j].getSize() > 0) // If cube exists.
+			if (arrayAsteroids[i][j].getRadius() > 0) // If asteroid exists.
 				if (checkSpheresIntersection(x - 5 * sin((M_PI / 180.0) * a), 0.0,
 					z - 5 * cos((M_PI / 180.0) * a), 7.072,
-					arrayCubes[i][j].getCenterX(), arrayCubes[i][j].getCenterY(),
-					arrayCubes[i][j].getCenterZ(), arrayCubes[i][j].getSize()))
+					arrayAsteroids[i][j].getCenterX(), arrayAsteroids[i][j].getCenterY(),
+					arrayAsteroids[i][j].getCenterZ(), arrayAsteroids[i][j].getRadius()))
 					return 1;
 	return 0;
 }
@@ -244,10 +246,10 @@ void drawScene(void)
 	// Fixed camera.
 	gluLookAt(0.0, 10.0, 20.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
-	// Draw all the cube in arrayCubes.
+	// Draw all the asteroids in arrayAsteroids.
 	for (j = 0; j < COLUMNS; j++)
 		for (i = 0; i < ROWS; i++)
-			arrayCubes[i][j].draw();
+			arrayAsteroids[i][j].draw();
 
 	// Draw spacecraft.
 	glPushMatrix();
@@ -288,12 +290,10 @@ void drawScene(void)
 		1.0,
 		0.0);
 
-
-
-	// Draw all the cubes in arrayCubes.
+	// Draw all the asteroids in arrayAsteroids.
 	for (j = 0; j < COLUMNS; j++)
 		for (i = 0; i < ROWS; i++)
-			arrayCubes[i][j].draw();
+			arrayAsteroids[i][j].draw();
 	// End right viewport.
 
 	glutSwapBuffers();
@@ -349,7 +349,7 @@ void specialKeyInput(int key, int x, int y)
 	if (tempAngle > 360.0) tempAngle -= 360.0;
 	if (tempAngle < 0.0) tempAngle += 360.0;
 
-	// Move spacecraft to next position only if there will not be collision with an cube.
+	// Move spacecraft to next position only if there will not be collision with an asteroid.
 	if (!asteroidCraftCollision(tempxVal, tempzVal, tempAngle))
 	{
 		isCollision = 0;
@@ -382,7 +382,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(800, 400);
 	glutInitWindowPosition(100, 100);
-	glutCreateWindow("movingCar.cpp");
+	glutCreateWindow("spaceTravel.cpp");
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(resize);
 	glutKeyboardFunc(keyInput);

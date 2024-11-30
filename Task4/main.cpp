@@ -27,8 +27,8 @@
 #include <cmath>
 #include <iostream>
 
-#include <GL/glew.h>
-#include <GL/freeglut.h> 
+#include <glew.h>
+#include <freeglut.h> 
 
 #define ROWS 8  // Number of rows of asteroids.
 #define COLUMNS 6 // Number of columns of asteroids.
@@ -223,7 +223,16 @@ int asteroidCraftCollision(float x, float z, float a)
 					return 1;
 	return 0;
 }
-
+std::string text = "Game Over";
+bool isGameOver = false;
+void restart(int val) {
+	xVal = 0;
+	zVal = 0;
+	angle = 0;
+	isCollision = 0;
+	isGameOver = false;
+	glutPostRedisplay();
+}
 // Drawing routine.
 void drawScene(void)
 {
@@ -240,7 +249,11 @@ void drawScene(void)
 	glPushMatrix();
 	glColor3f(1.0, 0.0, 0.0);
 	glRasterPos3f(-28.0, 25.0, -30.0);
-	if (isCollision) writeBitmapString((void*)font, "Cannot - will crash!");
+	if (isGameOver) writeBitmapString((void*)font, "Game Over");
+	if (isCollision) {
+		isGameOver = true;
+		glutTimerFunc(2000, restart, -1);
+	} 
 	glPopMatrix();
 
 	// Fixed camera.
@@ -267,7 +280,9 @@ void drawScene(void)
 	glPushMatrix();
 	glColor3f(1.0, 0.0, 0.0);
 	glRasterPos3f(-28.0, 25.0, -30.0);
-	if (isCollision) writeBitmapString((void*)font, "Cannot - will crash!");
+	//if (isCollision) writeBitmapString((void*)font, "Game Over");
+	if (isGameOver) writeBitmapString((void*)font, "Game Over");
+
 	glPopMatrix();
 
 	// Draw a vertical line on the left of the viewport to separate the two viewports

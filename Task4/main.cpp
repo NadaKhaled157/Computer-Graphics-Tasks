@@ -27,20 +27,20 @@
 #include <cmath>
 #include <iostream>
 
-#include <glew.h>
-#include <freeglut.h> 
+#include <GL/glew.h>
+#include <GL/freeglut.h> 
 
-#define ROWS 8  // Number of rows of asteroids.
-#define COLUMNS 6 // Number of columns of asteroids.
+#define ROWS 8  // Number of rows of cubes.
+#define COLUMNS 6 // Number of columns of cubes.
 #define FILL_PROBABILITY 100 // Percentage probability that a particular row-column slot will be 
-							 // filled with an asteroid. It should be an integer between 0 and 100.
+							 // filled with an cubes. It should be an integer between 0 and 100.
 
 // Globals.
 static long font = (long)GLUT_BITMAP_8_BY_13; // Font selection.
 static int width, height; // Size of the OpenGL window.
 static float angle = 0.0; // Angle of the spacecraft.
 static float xVal = 0, zVal = 0; // Co-ordinates of the spacecraft.
-static int isCollision = 0; // Is there collision between the spacecraft and an asteroid?
+static int isCollision = 0; // Is there collision between the spacecraft and a cube?
 static unsigned int spacecraft; // Display lists base index.
 static int frameCount = 0; // Number of frames
 
@@ -52,63 +52,64 @@ void writeBitmapString(void* font, const char* string)
 	for (c = string; *c != '\0'; c++) glutBitmapCharacter(font, *c);
 }
 
-// Asteroid class.
-class Asteroid
+// Cube class.
+class Cube
 {
 public:
-	Asteroid();
-	Asteroid(float x, float y, float z, float r, unsigned char colorR,
+	Cube();
+	Cube(float x, float y, float z, float s, unsigned char colorR,
 		unsigned char colorG, unsigned char colorB);
 	float getCenterX() { return centerX; }
 	float getCenterY() { return centerY; }
 	float getCenterZ() { return centerZ; }
-	float getRadius() { return radius; }
+	float getSize() { return size; }
 	void draw();
 
 private:
-	float centerX, centerY, centerZ, radius;
+	float centerX, centerY, centerZ, size;
 	unsigned char color[3];
 };
 
-// Asteroid default constructor.
-Asteroid::Asteroid()
+// Cube default constructor.
+Cube::Cube()
 {
 	centerX = 0.0;
 	centerY = 0.0;
 	centerZ = 0.0;
-	radius = 0.0; // Indicates no asteroid exists in the position.
+	size = 0.0; 
 	color[0] = 0;
 	color[1] = 0;
 	color[2] = 0;
 }
 
-// Asteroid constructor.
-Asteroid::Asteroid(float x, float y, float z, float r, unsigned char colorR,
+// Cube constructor.
+Cube::Cube(float x, float y, float z, float s, unsigned char colorR,
 	unsigned char colorG, unsigned char colorB)
 {
 	centerX = x;
 	centerY = y;
 	centerZ = z;
-	radius = r;
+	size = s;
 	color[0] = colorR;
 	color[1] = colorG;
 	color[2] = colorB;
 }
 
-// Function to draw asteroid.
-void Asteroid::draw()
+// Function to draw cube.
+void Cube::draw()
 {
-	if (radius > 0.0) // If asteroid exists.
+	if (size > 0.0) // If cube exists.
 	{
 		glPushMatrix();
 		glTranslatef(centerX, centerY, centerZ);
 		glColor3ubv(color);
-		glutWireSphere(radius, (int)radius * 6, (int)radius * 6);
+		glutSolidCube(size);
 		glPopMatrix();
 	}
 }
 
-Asteroid arrayAsteroids[ROWS][COLUMNS]; // Global array of asteroids.
+Cube arrayCubes[ROWS][COLUMNS]; // Global array of cubes.
+
 //class target:
 #include <cstdlib> // For random number generation.
 #include <ctime>   // For seeding the random number generator.
@@ -172,27 +173,27 @@ void initializeTarget()
 		int randomCol = rand() % (COLUMNS - 1); // Ensure there's space for adjacent columns.
 
 		// Determine the x and z position between these two columns in the final row.
-		float col1X = arrayAsteroids[ROWS - 1][randomCol].getCenterX();
-		float col2X = arrayAsteroids[ROWS - 1][randomCol + 1].getCenterX();
+		float col1X = arrayCubes[ROWS - 1][randomCol].getCenterX();
+		float col2X = arrayCubes[ROWS - 1][randomCol + 1].getCenterX();
 		x = (col1X + col2X) / 2.0f; // Centered between the two chosen columns.
-		z = arrayAsteroids[ROWS - 1][randomCol].getCenterZ();
+		z = arrayCubes[ROWS - 1][randomCol].getCenterZ();
 
-		// Check for collisions with all asteroids in the final row.
+		// Check for collisions with all cubes in the final row.
 		for (int j = 0; j < COLUMNS && isPositionValid; j++)
 		{
-			float asteroidX = arrayAsteroids[ROWS - 1][j].getCenterX();
-			float asteroidZ = arrayAsteroids[ROWS - 1][j].getCenterZ();
-			float asteroidRadius = arrayAsteroids[ROWS - 1][j].getRadius();
+			float cubeX = arrayCubes[ROWS - 1][j].getCenterX();
+			float cubeZ = arrayCubes[ROWS - 1][j].getCenterZ();
+			float cubeSize = arrayCubes[ROWS - 1][j].getSize();
 
-			if (asteroidRadius > 0.0f) // Only check existing asteroids.
+			if (cubeSize > 0.0f) // Only check existing cubes.
 			{
-				// Calculate the distance between the target and the asteroid.
-				float dx = x - asteroidX;
-				float dz = z - asteroidZ;
+				// Calculate the distance between the target and the cube.
+				float dx = x - cubeX;
+				float dz = z - cubeZ;
 				float distance = sqrt(dx * dx + dz * dz);
 
-				// Check if the target collides with the asteroid.
-				if (distance < (radius + asteroidRadius))
+				// Check if the target collides with the cube.
+				if (distance < (radius + cubeSize))
 				{
 					isPositionValid = false; // Position is invalid, retry.
 				}
@@ -269,20 +270,20 @@ void setup(void)
 
 	glEndList();
 
-	// Initialize global arrayAsteroids.
+	// Initialize global arrayCubes.
 	for (j = 0; j < COLUMNS; j++)
 		for (i = 0; i < ROWS; i++)
 			if (rand() % 100 < FILL_PROBABILITY)
-				// If rand()%100 >= FILL_PROBABILITY the default constructor asteroid remains in the slot 
-				// which indicates that there is no asteroid there because the default's radius is 0.
+				// If rand()%100 >= FILL_PROBABILITY the default constructor cube remains in the slot 
+				// which indicates that there is no cube there because the default's radius is 0.
 			{
-				// Position the asteroids depending on if there is an even or odd number of columns
-				// so that the spacecraft faces the middle of the asteroid field.
+				// Position the cubes depending on if there is an even or odd number of columns
+				// so that the spacecraft faces the middle of the cube field.
 				if (COLUMNS % 2) // Odd number of columns.
-					arrayAsteroids[i][j] = Asteroid(30.0 * (-COLUMNS / 2 + j), 0.0, -40.0 - 30.0 * i, 3.0,
+					arrayCubes[i][j] = Cube(30.0 * (-COLUMNS / 2 + j), 0.0, -40.0 - 30.0 * i, 3.0,
 						rand() % 256, rand() % 256, rand() % 256);
 				else // Even number of columns.
-					arrayAsteroids[i][j] = Asteroid(15 + 30.0 * (-COLUMNS / 2 + j), 0.0, -40.0 - 30.0 * i, 3.0,
+					arrayCubes[i][j] = Cube(15 + 30.0 * (-COLUMNS / 2 + j), 0.0, -40.0 - 30.0 * i, 3.0,
 						rand() % 256, rand() % 256, rand() % 256);
 			}
 	initializeTarget();
@@ -301,21 +302,21 @@ int checkSpheresIntersection(float x1, float y1, float z1, float r1,
 	return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) + (z1 - z2) * (z1 - z2) <= (r1 + r2) * (r1 + r2));
 }
 
-// Function to check if the spacecraft collides with an asteroid when the center of the base
+// Function to check if the spacecraft collides with an cube when the center of the base
 // of the craft is at (x, 0, z) and it is aligned at an angle a to to the -z direction.
 // Collision detection is approximate as instead of the spacecraft we use a bounding sphere.
-int asteroidCraftCollision(float x, float z, float a)
+int cubeCraftCollision(float x, float z, float a)
 {
 	int i, j;
 
-	// Check for collision with each asteroid.
+	// Check for collision with each cube.
 	for (j = 0; j < COLUMNS; j++)
 		for (i = 0; i < ROWS; i++)
-			if (arrayAsteroids[i][j].getRadius() > 0) // If asteroid exists.
+			if (arrayCubes[i][j].getSize() > 0) // If cube exists.
 				if (checkSpheresIntersection(x - 5 * sin((M_PI / 180.0) * a), 0.0,
 					z - 5 * cos((M_PI / 180.0) * a), 7.072,
-					arrayAsteroids[i][j].getCenterX(), arrayAsteroids[i][j].getCenterY(),
-					arrayAsteroids[i][j].getCenterZ(), arrayAsteroids[i][j].getRadius()))
+					arrayCubes[i][j].getCenterX(), arrayCubes[i][j].getCenterY(),
+					arrayCubes[i][j].getCenterZ(), arrayCubes[i][j].getSize()))
 					return 1;
 	return 0;
 }
@@ -349,16 +350,16 @@ void drawScene(void)
 	if (isCollision) {
 		isGameOver = true;
 		glutTimerFunc(2000, restart, -1);
-	} 
+	}
 	glPopMatrix();
 
 	// Fixed camera.
 	gluLookAt(0.0, 10.0, 20.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
-	// Draw all the asteroids in arrayAsteroids.
+	// Draw all the cubes in arrayCubes.
 	for (j = 0; j < COLUMNS; j++)
 		for (i = 0; i < ROWS; i++)
-			arrayAsteroids[i][j].draw();
+			arrayCubes[i][j].draw();
 	target.draw();
 
 	// Draw spacecraft.
@@ -402,10 +403,10 @@ void drawScene(void)
 		1.0,
 		0.0);
 
-	// Draw all the asteroids in arrayAsteroids.
+	// Draw all the cubes in arrayCubes.
 	for (j = 0; j < COLUMNS; j++)
 		for (i = 0; i < ROWS; i++)
-			arrayAsteroids[i][j].draw();
+			arrayCubes[i][j].draw();
 	target.draw();
 	// End right viewport.
 
@@ -462,8 +463,8 @@ void specialKeyInput(int key, int x, int y)
 	if (tempAngle > 360.0) tempAngle -= 360.0;
 	if (tempAngle < 0.0) tempAngle += 360.0;
 
-	// Move spacecraft to next position only if there will not be collision with an asteroid.
-	if (!asteroidCraftCollision(tempxVal, tempzVal, tempAngle))
+	// Move spacecraft to next position only if there will not be collision with an cube.
+	if (!cubeCraftCollision(tempxVal, tempzVal, tempAngle))
 	{
 		isCollision = 0;
 		xVal = tempxVal;
@@ -508,4 +509,3 @@ int main(int argc, char** argv)
 
 	glutMainLoop();
 }
-

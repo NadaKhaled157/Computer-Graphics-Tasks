@@ -43,7 +43,7 @@ static float xVal = 0, zVal = 0; // Co-ordinates of the spacecraft.
 static int isCollision = 0; // Is there collision between the spacecraft and a cube?
 static unsigned int spacecraft; // Display lists base index.
 static int frameCount = 0; // Number of frames
-int carRadius = 16;
+int carRadius = 7.072;
 bool isCollisionTarget;
 // Routine to draw a bitmap character string.
 void writeBitmapString(void* font, const char* string)
@@ -315,8 +315,8 @@ bool checkTargetCollision(float x, float z, float a)
 	float carZ = z - 5 * cos((M_PI / 180.0) * a);
 
 	// Check for intersection with the target's bounding sphere.
-	return checkSpheresIntersection(carX, 0.0, carZ, carRadius,
-		target.getCenterX(), target.getCenterY(), target.getCenterZ(), 5.0f);
+	if(checkSpheresIntersection(carX, 0.0, carZ, carRadius,
+		target.getCenterX(), target.getCenterY(), target.getCenterZ(), 5.0f)) return 1;
 }
 
 // Function to check if the spacecraft collides with an cube when the center of the base
@@ -371,7 +371,6 @@ void drawScene(void)
 	}
 	if(isCollisionTarget) writeBitmapString((void*)font, "Game Over But You Won");
 	if (isCollisionTarget) {
-		isGameOver = true;
 		glutTimerFunc(2000, restart, -1);
 	}
 	glPopMatrix();
@@ -494,7 +493,7 @@ void specialKeyInput(int key, int x, int y)
 		zVal = tempzVal;
 		angle = tempAngle;
 	}
-	else if (!checkTargetCollision(tempxVal, tempzVal, tempAngle))
+	else if (checkTargetCollision(tempxVal, tempzVal, tempAngle))
 
 	isCollisionTarget = 1;
 	

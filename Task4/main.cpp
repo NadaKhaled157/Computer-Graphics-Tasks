@@ -28,7 +28,7 @@
 #include <iostream>
 
 #include <GL/glew.h>
-#include <GL/freeglut.h> 
+#include <freeglut.h> 
 
 #define ROWS 8  // Number of rows of cubes.
 #define COLUMNS 6 // Number of columns of cubes.
@@ -43,7 +43,8 @@ static float xVal = 0, zVal = 0; // Co-ordinates of the spacecraft.
 static int isCollision = 0; // Is there collision between the spacecraft and a cube?
 static unsigned int spacecraft; // Display lists base index.
 static int frameCount = 0; // Number of frames
-
+int carRadius = 16;
+bool isCollisionTarget;
 // Routine to draw a bitmap character string.
 void writeBitmapString(void* font, const char* string)
 {
@@ -110,6 +111,7 @@ void Cube::draw()
 
 Cube arrayCubes[ROWS][COLUMNS]; // Global array of cubes.
 
+Cube carMainBody, carBack, carFront;
 //class target:
 #include <cstdlib> // For random number generation.
 #include <ctime>   // For seeding the random number generator.
@@ -200,6 +202,8 @@ void initializeTarget()
 			}
 		}
 
+		//check of collision with the target
+
 	} while (!isPositionValid); // Repeat until a valid position is found.
 
 	// Set the global target object.
@@ -219,6 +223,8 @@ void frameCounter(int value)
 void setup(void)
 {
 	int i, j;
+
+	
 
 	spacecraft = glGenLists(1);
 	glNewList(spacecraft, GL_COMPILE);
@@ -302,6 +308,17 @@ int checkSpheresIntersection(float x1, float y1, float z1, float r1,
 	return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) + (z1 - z2) * (z1 - z2) <= (r1 + r2) * (r1 + r2));
 }
 
+bool checkTargetCollision(float x, float z, float a)
+{
+	// Calculate the bounding sphere for the car.
+	float carX = x - 5 * sin((M_PI / 180.0) * a);
+	float carZ = z - 5 * cos((M_PI / 180.0) * a);
+
+	// Check for intersection with the target's bounding sphere.
+	return checkSpheresIntersection(carX, 0.0, carZ, carRadius,
+		target.getCenterX(), target.getCenterY(), target.getCenterZ(), 5.0f);
+}
+
 // Function to check if the spacecraft collides with an cube when the center of the base
 // of the craft is at (x, 0, z) and it is aligned at an angle a to to the -z direction.
 // Collision detection is approximate as instead of the spacecraft we use a bounding sphere.
@@ -328,6 +345,7 @@ void restart(int val) {
 	angle = 0;
 	isCollision = 0;
 	isGameOver = false;
+	isCollisionTarget = 0;
 	glutPostRedisplay();
 }
 // Drawing routine.
@@ -348,6 +366,11 @@ void drawScene(void)
 	glRasterPos3f(-28.0, 25.0, -30.0);
 	if (isGameOver) writeBitmapString((void*)font, "Game Over");
 	if (isCollision) {
+		isGameOver = true;
+		glutTimerFunc(2000, restart, -1);
+	}
+	if(isCollisionTarget) writeBitmapString((void*)font, "Game Over But You Won");
+	if (isCollisionTarget) {
 		isGameOver = true;
 		glutTimerFunc(2000, restart, -1);
 	}
@@ -378,8 +401,8 @@ void drawScene(void)
 	glPushMatrix();
 	glColor3f(1.0, 0.0, 0.0);
 	glRasterPos3f(-28.0, 25.0, -30.0);
-	//if (isCollision) writeBitmapString((void*)font, "Game Over");
-	if (isGameOver) writeBitmapString((void*)font, "Game Over");
+	if (isCollision) writeBitmapString((void*)font, "Game Over");
+	//if (isGameOver) writeBitmapString((void*)font, "Game Over");
 
 	glPopMatrix();
 
@@ -471,6 +494,10 @@ void specialKeyInput(int key, int x, int y)
 		zVal = tempzVal;
 		angle = tempAngle;
 	}
+	else if (!checkTargetCollision(tempxVal, tempzVal, tempAngle))
+
+	isCollisionTarget = 1;
+	
 	else isCollision = 1;
 
 	glutPostRedisplay();

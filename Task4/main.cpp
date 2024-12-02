@@ -28,7 +28,7 @@
 #include <iostream>
 
 #include <GL/glew.h>
-#include <freeglut.h> 
+#include <GL/freeglut.h> 
 
 #define ROWS 8  // Number of rows of cubes.
 #define COLUMNS 6 // Number of columns of cubes.
@@ -41,10 +41,10 @@ static int width, height; // Size of the OpenGL window.
 static float angle = 0.0; // Angle of the spacecraft.
 static float xVal = 0, zVal = 0; // Co-ordinates of the spacecraft.
 static int isCollision = 0; // Is there collision between the spacecraft and a cube?
+bool isCollisionTarget = false; // track if the player has won
 static unsigned int spacecraft; // Display lists base index.
 static int frameCount = 0; // Number of frames
-int carRadius = 7.072;
-bool isCollisionTarget;
+
 // Routine to draw a bitmap character string.
 void writeBitmapString(void* font, const char* string)
 {
@@ -77,7 +77,7 @@ Cube::Cube()
 	centerX = 0.0;
 	centerY = 0.0;
 	centerZ = 0.0;
-	size = 0.0; 
+	size = 0.0;
 	color[0] = 0;
 	color[1] = 0;
 	color[2] = 0;
@@ -111,7 +111,6 @@ void Cube::draw()
 
 Cube arrayCubes[ROWS][COLUMNS]; // Global array of cubes.
 
-Cube carMainBody, carBack, carFront;
 //class target:
 #include <cstdlib> // For random number generation.
 #include <ctime>   // For seeding the random number generator.
@@ -121,7 +120,8 @@ class Target
 public:
 	Target() : centerX(0), centerY(0), centerZ(0), radius(5.0f) {}
 	Target(float x, float y, float z, float r)
-		: centerX(x), centerY(y), centerZ(z), radius(r) {}
+		: centerX(x), centerY(y), centerZ(z), radius(r) {
+	}
 
 	void draw()
 	{
@@ -140,6 +140,7 @@ public:
 	float getCenterX() const { return centerX; }
 	float getCenterY() const { return centerY; }
 	float getCenterZ() const { return centerZ; }
+	float getRadius() const { return radius; }
 
 private:
 	float centerX, centerY, centerZ, radius;
@@ -202,8 +203,6 @@ void initializeTarget()
 			}
 		}
 
-		//check of collision with the target
-
 	} while (!isPositionValid); // Repeat until a valid position is found.
 
 	// Set the global target object.
@@ -223,8 +222,6 @@ void frameCounter(int value)
 void setup(void)
 {
 	int i, j;
-
-	
 
 	spacecraft = glGenLists(1);
 	glNewList(spacecraft, GL_COMPILE);
@@ -300,23 +297,20 @@ void setup(void)
 	glutTimerFunc(0, frameCounter, 0); // Initial call of frameCounter().
 }
 
+// Function to check if the spacecraft collides with the target
+bool checkTargetCollision(float x, float z) {
+	float dx = x - target.getCenterX();
+	float dz = z - target.getCenterZ();
+	float distance = sqrt(dx * dx + dz * dz);
+	return distance < (target.getRadius() + 3.0f); // Car has a radius of 3.0f
+}
+
 // Function to check if two spheres centered at (x1,y1,z1) and (x2,y2,z2) with
 // radius r1 and r2 intersect.
 int checkSpheresIntersection(float x1, float y1, float z1, float r1,
 	float x2, float y2, float z2, float r2)
 {
 	return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) + (z1 - z2) * (z1 - z2) <= (r1 + r2) * (r1 + r2));
-}
-
-bool checkTargetCollision(float x, float z, float a)
-{
-	// Calculate the bounding sphere for the car.
-	float carX = x - 5 * sin((M_PI / 180.0) * a);
-	float carZ = z - 5 * cos((M_PI / 180.0) * a);
-
-	// Check for intersection with the target's bounding sphere.
-	if(checkSpheresIntersection(carX, 0.0, carZ, carRadius,
-		target.getCenterX(), target.getCenterY(), target.getCenterZ(), 5.0f)) return 1;
 }
 
 // Function to check if the spacecraft collides with an cube when the center of the base
@@ -331,7 +325,7 @@ int cubeCraftCollision(float x, float z, float a)
 		for (i = 0; i < ROWS; i++)
 			if (arrayCubes[i][j].getSize() > 0) // If cube exists.
 				if (checkSpheresIntersection(x - 5 * sin((M_PI / 180.0) * a), 0.0,
-					z - 5 * cos((M_PI / 180.0) * a), 7.072,
+					z - 5 * cos((M_PI / 180.0) * a), 4.072,
 					arrayCubes[i][j].getCenterX(), arrayCubes[i][j].getCenterY(),
 					arrayCubes[i][j].getCenterZ(), arrayCubes[i][j].getSize()))
 					return 1;
@@ -345,7 +339,7 @@ void restart(int val) {
 	angle = 0;
 	isCollision = 0;
 	isGameOver = false;
-	isCollisionTarget = 0;
+	isCollisionTarget = false;
 	glutPostRedisplay();
 }
 // Drawing routine.
@@ -367,12 +361,15 @@ void drawScene(void)
 	if (isGameOver) writeBitmapString((void*)font, "Game Over");
 	if (isCollision) {
 		isGameOver = true;
-		glutTimerFunc(2000, restart, -1);
+		glutTimerFunc(3000, restart, -1);
 	}
-	if(isCollisionTarget) writeBitmapString((void*)font, "Game Over But You Won");
-	if (isCollisionTarget) {
-		glutTimerFunc(2000, restart, -1);
+
+	if (!isCollisionTarget && checkTargetCollision(xVal, zVal)) {
+		isCollisionTarget = true; // Set win state to true
+		glutTimerFunc(3000, restart, -1);
+		//glutPostRedisplay(); // Request a redraw to show the win message
 	}
+
 	glPopMatrix();
 
 	// Fixed camera.
@@ -400,8 +397,9 @@ void drawScene(void)
 	glPushMatrix();
 	glColor3f(1.0, 0.0, 0.0);
 	glRasterPos3f(-28.0, 25.0, -30.0);
-	if (isCollision) writeBitmapString((void*)font, "Game Over");
-	//if (isGameOver) writeBitmapString((void*)font, "Game Over");
+	//if (isCollision) writeBitmapString((void*)font, "Game Over");
+	if (isGameOver) writeBitmapString((void*)font, "Game Over");
+	if (isCollisionTarget) writeBitmapString((void*)font, "You Win!");
 
 	glPopMatrix();
 
@@ -493,10 +491,6 @@ void specialKeyInput(int key, int x, int y)
 		zVal = tempzVal;
 		angle = tempAngle;
 	}
-	else if (checkTargetCollision(tempxVal, tempzVal, tempAngle))
-
-	isCollisionTarget = 1;
-	
 	else isCollision = 1;
 
 	glutPostRedisplay();

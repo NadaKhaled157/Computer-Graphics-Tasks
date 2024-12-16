@@ -49,31 +49,30 @@ static unsigned int spacecraft; // Display lists base index.
 static int frameCount = 0; // Number of frames
 
 // Globals.
-static unsigned int texture[7]; // Array of texture indices.
+static unsigned int texture[2]; // Array of texture indices.
 static float d = 0.0; // Distance parameter in gluLookAt().
 static int filter = 0; // Filter id.
 
-void loadTextures()
-{
-	// Local storage for bmp image data.
-	imageFile* image[3];
+int menuChoice = 1; // Default choice: 1 for grass
+bool showMenu = false;
 
-	// Load the images.
-	image[0] = getBMP("grass.bmp");
+void loadTextures() {
+	// Local storage for BMP image data
+	imageFile* image[2]; // image[0]: grass or sand, image[1]: sky
+
+	// Load the sky texture (constant)
 	image[1] = getBMP("sky.bmp");
-	image[2] = getBMP("sand.bmp");
 
-	// Bind grass image to texture[0] with specified mag and min filters.
+	// Load the selected ground texture
+	if (menuChoice == 1) { // Grass
+		image[0] = getBMP("grass.bmp");
+	}
+	else if (menuChoice == 2) { // Sand
+		image[0] = getBMP("sand2.bmp");
+	}
+
+	// Bind and configure ground texture
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[0]->width, image[0]->height, 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, image[0]->data);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	// Bind grass image to texture[1] with specified mag and min filters.
-	glBindTexture(GL_TEXTURE_2D, texture[1]);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[0]->width, image[0]->height, 0,
 		GL_RGBA, GL_UNSIGNED_BYTE, image[0]->data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -81,59 +80,69 @@ void loadTextures()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	// Bind grass image to texture[2] with specified mag and min filters.
-	// Use mipmapping.
-	glBindTexture(GL_TEXTURE_2D, texture[2]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[0]->width, image[0]->height, 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, image[0]->data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// Bind grass image to texture[3] with specified mag and min filters.
-	// Use mipmapping.
-	glBindTexture(GL_TEXTURE_2D, texture[3]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[0]->width, image[0]->height, 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, image[0]->data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// Bind grass image to texture[4] with specified mag and min filters.
-	// Use mipmapping.
-	glBindTexture(GL_TEXTURE_2D, texture[4]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[0]->width, image[0]->height, 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, image[0]->data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// Bind grass image to texture[5] with specified mag and min filters.
-	// Use mipmapping.
-	glBindTexture(GL_TEXTURE_2D, texture[5]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[0]->width, image[0]->height, 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, image[0]->data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// Bind sky image to texture[6]
-	glBindTexture(GL_TEXTURE_2D, texture[6]);
+	// Bind and configure sky texture
+	glBindTexture(GL_TEXTURE_2D, texture[1]);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[1]->width, image[1]->height, 0,
 		GL_RGBA, GL_UNSIGNED_BYTE, image[1]->data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+
+	// Cleanup dynamically allocated image data
+	delete image[0];
+	delete image[1];
 }
+
+
+// Function to draw text (for the menu)
+void drawText(const std::string& text, float x, float y) {
+	glRasterPos2f(x, y);
+	for (char c : text) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+	}
+}
+
+// Menu rendering
+void renderMenu() {
+	// Draw a simple menu with 2 options
+	glColor3f(0.8, 0.8, 0.8); // Background color
+	glBegin(GL_QUADS);
+	glVertex2f(-0.3, 0.2);
+	glVertex2f(0.3, 0.2);
+	glVertex2f(0.3, -0.2);
+	glVertex2f(-0.3, -0.2);
+	glEnd();
+
+	glColor3f(1.0, 1.0, 1.0); // Text color
+	drawText("1. Grass Ground", -0.25, 0.1);
+	drawText("2. Sand Ground", -0.25, -0.05);
+	drawText("Press 1 or 2 to Select", -0.25, -0.15);
+}
+
+void keyboardHandler(unsigned char key, int x, int y) {
+
+	std::cout << "press m to show the menu ";
+	if (key == 'm' || key == 'M') {
+		showMenu = !showMenu; // Toggle menu visibility
+		glutPostRedisplay();
+	}
+	else if (showMenu) {
+		if (key == '1') { // Select Grass
+			menuChoice = 1; // Grass selected
+			showMenu = false; // Hide menu
+			loadTextures();  // Reload textures
+		}
+		else if (key == '2') { // Select Sand
+			menuChoice = 2; // Sand selected
+			showMenu = false; // Hide menu
+			loadTextures();  // Reload textures
+		}
+	}
+	glutPostRedisplay();
+}
+
 
 // Routine to draw a bitmap character string.
 void writeBitmapString(void* font, const char* string)
@@ -313,7 +322,7 @@ void setup(void)
 {
 
 	// Create texture ids.
-	glGenTextures(7, texture);
+	glGenTextures(2, texture);
 
 	// Load external textures.
 	loadTextures();
@@ -454,28 +463,6 @@ void drawScene(void)
 	int i, j;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//glEnable(GL_TEXTURE_2D);
-	//glLoadIdentity();
-	//gluLookAt(0.0, 10.0, 15.0 + d, 0.0, 10.0, d, 0.0, 1.0, 0.0);
-
-	//// Map the grass texture onto a rectangle along the xz-plane.
-	//glBindTexture(GL_TEXTURE_2D, texture[filter]);
-	//glBegin(GL_POLYGON);
-	//glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 0.0, 100.0);
-	//glTexCoord2f(8.0, 0.0); glVertex3f(100.0, 0.0, 100.0);
-	//glTexCoord2f(8.0, 8.0); glVertex3f(100.0, 0.0, -100.0);
-	//glTexCoord2f(0.0, 8.0); glVertex3f(-100.0, 0.0, -100.0);
-	//glEnd();
-
-	//// Map the sky texture onto a rectangle parallel to the xy-plane.
-	//glBindTexture(GL_TEXTURE_2D, texture[6]);
-	//glBegin(GL_POLYGON);
-	//glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 0.0, -70.0);
-	//glTexCoord2f(1.0, 0.0); glVertex3f(100.0, 0.0, -70.0);
-	//glTexCoord2f(1.0, 1.0); glVertex3f(100.0, 120.0, -70.0);
-	//glTexCoord2f(0.0, 1.0); glVertex3f(-100.0, 120.0, -70.0);
-	//glEnd();
-
 	// Write data.
 	glDisable(GL_TEXTURE_2D);
 	glLoadIdentity();
@@ -504,7 +491,7 @@ void drawScene(void)
 	glPopMatrix();
 
 	// Fixed camera.
-	gluLookAt(0.0, 10, 20.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+	gluLookAt(0.0, 5, 20.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 	// Draw all the cubes in arrayCubes.
 	for (j = 0; j < COLUMNS; j++)
@@ -534,7 +521,7 @@ void drawScene(void)
 	glEnd();
 
 	// Map the sky texture onto a rectangle parallel to the xy-plane.
-	glBindTexture(GL_TEXTURE_2D, texture[6]);
+	glBindTexture(GL_TEXTURE_2D, texture[1]);
 	glBegin(GL_POLYGON);
 	glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 0.0, -70.0);
 	glTexCoord2f(1.0, 0.0); glVertex3f(100.0, 0.0, -70.0);
@@ -549,27 +536,6 @@ void drawScene(void)
 	glViewport(width / 2.0, 0, width / 2.0, height);
 	glLoadIdentity();
 
-	//glEnable(GL_TEXTURE_2D);
-	//glLoadIdentity();
-	//gluLookAt(0.0, 1510 20 + d, 0.0, 10.0, d, 0.0, 1.0, 0.0);
-
-	//// Map the grass texture onto a rectangle along the xz-plane.
-	//glBindTexture(GL_TEXTURE_2D, texture[filter]);
-	//glBegin(GL_POLYGON);
-	//glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 0.0, 100.0);
-	//glTexCoord2f(8.0, 0.0); glVertex3f(100.0, 0.0, 100.0);
-	//glTexCoord2f(8.0, 8.0); glVertex3f(100.0, 0.0, -100.0);
-	//glTexCoord2f(0.0, 8.0); glVertex3f(-100.0, 0.0, -100.0);
-	//glEnd();
-
-	//// Map the sky texture onto a rectangle parallel to the xy-plane.
-	//glBindTexture(GL_TEXTURE_2D, texture[6]);
-	//glBegin(GL_POLYGON);
-	//glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 0.0, -70.0);
-	//glTexCoord2f(1.0, 0.0); glVertex3f(100.0, 0.0, -70.0);
-	//glTexCoord2f(1.0, 1.0); glVertex3f(100.0, 120.0, -70.0);
-	//glTexCoord2f(0.0, 1.0); glVertex3f(-100.0, 120.0, -70.0);
-	//glEnd();
 
 	// Write data.
 	glDisable(GL_TEXTURE_2D);
@@ -626,7 +592,7 @@ void drawScene(void)
 	glEnd();
 
 	// Map the sky texture onto a rectangle parallel to the xy-plane.
-	glBindTexture(GL_TEXTURE_2D, texture[6]);
+	glBindTexture(GL_TEXTURE_2D, texture[1]);
 	glBegin(GL_POLYGON);
 	glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 0.0, -70.0);
 	glTexCoord2f(1.0, 0.0); glVertex3f(100.0, 0.0, -70.0);
@@ -634,6 +600,12 @@ void drawScene(void)
 	glTexCoord2f(0.0, 1.0); glVertex3f(-100.0, 120.0, -70.0);
 	glEnd();
 	// End right viewport.
+
+	  // Render menu if visible
+	if (showMenu) {
+		renderMenu();
+	}
+
 
 	glutSwapBuffers();
 }
@@ -698,8 +670,8 @@ void specialKeyInput(int key, int x, int y)
 		zVal = tempzVal;
 		angle = tempAngle;
 	}
-	
-	else{
+
+	else {
 		isCollision = 1;
 		d = 0;
 	}
@@ -715,6 +687,8 @@ void printInteraction(void)
 		<< "Press the up/down arrow keys to move the craft." << std::endl;
 }
 
+
+
 // Main routine.
 int main(int argc, char** argv)
 {
@@ -729,9 +703,17 @@ int main(int argc, char** argv)
 	glutInitWindowPosition(100, 100);
 	glutCreateWindow("spaceTravel.cpp");
 	glutDisplayFunc(drawScene);
+
 	glutReshapeFunc(resize);
 	glutKeyboardFunc(keyInput);
 	glutSpecialFunc(specialKeyInput);
+	glutKeyboardFunc(keyboardHandler);
+	glEnable(GL_DEPTH_TEST);
+	glGenTextures(2, texture);
+
+	loadTextures(); // Initial texture load
+
+	glutKeyboardFunc(keyboardHandler);
 
 	glewExperimental = GL_TRUE;
 	glewInit();

@@ -106,19 +106,36 @@ void drawText(const std::string& text, float x, float y) {
 
 // Menu rendering
 void renderMenu() {
-	// Draw a simple menu with 2 options
-	glColor3f(0.8, 0.8, 0.8); // Background color
-	glBegin(GL_QUADS);
-	glVertex2f(-0.3, 0.2);
-	glVertex2f(0.3, 0.2);
-	glVertex2f(0.3, -0.2);
-	glVertex2f(-0.3, -0.2);
-	glEnd();
 
-	glColor3f(1.0, 1.0, 1.0); // Text color
-	drawText("1. Grass Ground", -0.25, 0.1);
-	drawText("2. Sand Ground", -0.25, -0.05);
-	drawText("Press 1 or 2 to Select", -0.25, -0.15);
+	glDisable(GL_DEPTH_TEST); // Disable depth testing to render menu in front
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(-1, 1, -1, 1); // Set up a 2D orthographic projection
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+	//// Draw a simple menu with 2 options
+	//glColor3f(0.8, 0.8, 0.8); // Background color
+	//glBegin(GL_QUADS);
+	//glVertex2f(-0.5, 0.5); // Top-left
+	//glVertex2f(0.5, 0.5);  // Top-right
+	//glVertex2f(0.5, -0.5); // Bottom-right
+	//glVertex2f(-0.5, -0.5); // Bottom-left
+	//glEnd();
+
+	// Render menu text
+	glColor3f(0, 0, 0); // Black text
+	drawText("1. Grass Ground", -0.4, 0.5);
+	drawText("2. Sand Ground", -0.4, 0.3);
+	drawText("Press 1 or 2 to Select", -0.4, 0.1);
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	glEnable(GL_DEPTH_TEST); // Re-enable depth testing
 }
 
 void keyboardHandler(unsigned char key, int x, int y) {
@@ -463,9 +480,17 @@ void drawScene(void)
 	int i, j;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	//// Render the 3D scene
+	//glViewport(0, 0, width, height); // Ensure full screen viewport
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
+	
+
 	// Write data.
 	glDisable(GL_TEXTURE_2D);
 	glLoadIdentity();
+	gluPerspective(45.0, (float)width / height, 1.0, 1000.0);
+	glMatrixMode(GL_MODELVIEW);
 
 	// Begin left viewport.
 	glViewport(0, 0, width / 2.0, height);
@@ -514,10 +539,10 @@ void drawScene(void)
 	// Map the grass texture onto a rectangle along the xz-plane.
 	glBindTexture(GL_TEXTURE_2D, texture[filter]);
 	glBegin(GL_POLYGON);
-	glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 0.0, 100.0);
-	glTexCoord2f(8.0, 0.0); glVertex3f(100.0, 0.0, 100.0);
-	glTexCoord2f(8.0, 8.0); glVertex3f(100.0, 0.0, -100.0);
-	glTexCoord2f(0.0, 8.0); glVertex3f(-100.0, 0.0, -100.0);
+	glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 1.0, 100.0);
+	glTexCoord2f(8.0, 0.0); glVertex3f(100.0, 1.0, 100.0);
+	glTexCoord2f(8.0, 8.0); glVertex3f(100.0, 1.0, -100.0);
+	glTexCoord2f(0.0, 8.0); glVertex3f(-100.0, 1.0, -100.0);
 	glEnd();
 
 	// Map the sky texture onto a rectangle parallel to the xy-plane.
@@ -603,6 +628,8 @@ void drawScene(void)
 
 	  // Render menu if visible
 	if (showMenu) {
+		glClear(GL_DEPTH_BUFFER_BIT); // Clear depth buffer
+
 		renderMenu();
 	}
 

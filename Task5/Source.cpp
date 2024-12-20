@@ -29,14 +29,16 @@
 #include <vector>
 #include <string>
 
-#include <GL/glew.h>
-#include <GL/freeglut.h> 
+#include <glew.h>
+#include <freeglut.h> 
 #include "getBMP.h"
 
 #define ROWS 8  // Number of rows of cubes.
 #define COLUMNS 6 // Number of columns of cubes.
 #define FILL_PROBABILITY 100 // Percentage probability that a particular row-column slot will be 
 							 // filled with an cubes. It should be an integer between 0 and 100.
+
+//#include <GL/glut.h>
 
 // Globals.
 static long font = (long)GLUT_BITMAP_8_BY_13; // Font selection.
@@ -55,6 +57,41 @@ static int filter = 0; // Filter id.
 
 int menuChoice = 1; // Default choice: 1 for grass
 bool showMenu = false;
+
+// Spacecraft material - metallic
+GLfloat spacecraft_ambient[] = {0.25f, 0.25f, 0.25f, 1.0f};
+GLfloat spacecraft_diffuse[] = {0.4f, 0.4f, 0.4f, 1.0f};
+GLfloat spacecraft_specular[] = {0.774597f, 0.774597f, 0.774597f, 1.0f};
+GLfloat spacecraft_shininess = 99.8f;
+
+// Asteroid material - rocky
+GLfloat asteroid_ambient[] = {0.1f, 0.1f, 0.1f, 1.0f};
+GLfloat asteroid_diffuse[] = {0.4f, 0.4f, 0.4f, 1.0f};
+GLfloat asteroid_specular[] = {0.3f, 0.3f, 0.3f, 1.0f};
+GLfloat asteroid_shininess = 10.0f;
+
+
+void setupLighting(void)
+{
+    // Enable lighting
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    
+    // Sunset directional light (coming from low angle)
+    GLfloat light_position[] = {1.0f, 0.1f, 1.0f, 0.0f}; // Directional light
+    GLfloat light_ambient[] = {0.2f, 0.1f, 0.1f, 1.0f};  // Low ambient, reddish
+    GLfloat light_diffuse[] = {1.0f, 0.6f, 0.2f, 1.0f};  // Orange-red sunset color
+    GLfloat light_specular[] = {1.0f, 0.6f, 0.2f, 1.0f};
+    
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+    
+    // Enable color material and normalization
+    glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_NORMALIZE);
+}
 
 void loadTextures() {
 	// Local storage for BMP image data
@@ -424,6 +461,25 @@ void setup(void)
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 
 	glutTimerFunc(0, frameCounter, 0); // Initial call of frameCounter().
+	setupLighting();
+}
+
+void drawSpacecraft()
+{
+    glMaterialfv(GL_FRONT, GL_AMBIENT, spacecraft_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, spacecraft_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, spacecraft_specular);
+    glMaterialf(GL_FRONT, GL_SHININESS, spacecraft_shininess);
+    // ...existing spacecraft drawing code...
+}
+
+void drawAsteroid()
+{
+    glMaterialfv(GL_FRONT, GL_AMBIENT, asteroid_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, asteroid_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, asteroid_specular);
+    glMaterialf(GL_FRONT, GL_SHININESS, asteroid_shininess);
+    // ...existing asteroid drawing code...
 }
 
 // Function to check if the spacecraft collides with the target
@@ -471,6 +527,66 @@ void restart(int val) {
 	isGameOver = false;
 	isCollisionTarget = false;
 	glutPostRedisplay();
+}
+// Function to draw headlights and create their lighting effect
+void drawHeadlights()
+{
+	// Create and position the headlight materials
+	GLfloat headlight_ambient[] = {0.1f, 0.1f, 0.1f, 1.0f};
+	GLfloat headlight_diffuse[] = {1.0f, 1.0f, 0.8f, 1.0f}; // Warm white color
+	GLfloat headlight_specular[] = {1.0f, 1.0f, 0.8f, 1.0f};
+	
+	// Enable a second light for the headlights
+	glEnable(GL_LIGHT1);
+	
+	// Position the headlight relative to the spacecraft
+	GLfloat light_position[] = {
+		xVal - 6.0f * sin((M_PI / 180.0) * angle), // x
+		0.0f,                                       // y
+		zVal - 6.0f * cos((M_PI / 180.0) * angle), // z
+		1.0f                                        // w (positional light)
+	};
+	
+	// Set the direction of the headlight beam
+	GLfloat spot_direction[] = {
+		-sin((M_PI / 180.0) * angle), // x
+		0.0f,                         // y
+		-cos((M_PI / 180.0) * angle) // z
+	};
+	
+	// Configure the headlight properties
+	glLightfv(GL_LIGHT1, GL_POSITION, light_position);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, headlight_ambient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, headlight_diffuse);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, headlight_specular);
+	
+	// Configure spotlight parameters
+	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 30.0f);        // 30 degree cone
+	glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, 2.0f);       // Light falloff
+	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spot_direction);
+	
+	// Draw the physical headlight objects
+	glPushMatrix();
+	glTranslatef(xVal, 0.0, zVal);
+	glRotatef(angle, 0.0, 1.0, 0.0);
+	
+	// Material properties for the headlight objects
+	GLfloat lamp_material[] = {0.9f, 0.9f, 0.7f, 1.0f};
+	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, lamp_material);
+	
+	// Draw left headlight
+	glPushMatrix();
+	glTranslatef(-1.5f, 0.0f, -6.5f);
+	glutSolidSphere(0.6f, 10, 10);
+	glPopMatrix();
+	
+	// Draw right headlight
+	glPushMatrix();
+	glTranslatef(1.5f, 0.0f, -6.5f);
+	glutSolidSphere(0.6f, 10, 10);
+	glPopMatrix();
+	
+	glPopMatrix();
 }
 // Drawing routine.
 void drawScene(void)
@@ -530,6 +646,7 @@ void drawScene(void)
 	glRotatef(angle, 0.0, 1.0, 0.0);
 	glCallList(spacecraft);
 	glPopMatrix();
+	drawHeadlights();
 
 
 	glEnable(GL_TEXTURE_2D);
@@ -539,19 +656,19 @@ void drawScene(void)
 	// Map the grass texture onto a rectangle along the xz-plane.
 	glBindTexture(GL_TEXTURE_2D, texture[filter]);
 	glBegin(GL_POLYGON);
-	glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 1.0, 100.0);
-	glTexCoord2f(8.0, 0.0); glVertex3f(100.0, 1.0, 100.0);
-	glTexCoord2f(8.0, 8.0); glVertex3f(100.0, 1.0, -100.0);
-	glTexCoord2f(0.0, 8.0); glVertex3f(-100.0, 1.0, -100.0);
+	glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 0.0, 100.0);
+	glTexCoord2f(8.0, 0.0); glVertex3f(100.0, 0.0, 100.0);
+	glTexCoord2f(8.0, 8.0); glVertex3f(100.0, 0.0, -100.0);
+	glTexCoord2f(0.0, 8.0); glVertex3f(-100.0, 0.0, -100.0);
 	glEnd();
 
 	// Map the sky texture onto a rectangle parallel to the xy-plane.
 	glBindTexture(GL_TEXTURE_2D, texture[1]);
 	glBegin(GL_POLYGON);
-	glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 0.0, -70.0);
-	glTexCoord2f(1.0, 0.0); glVertex3f(100.0, 0.0, -70.0);
-	glTexCoord2f(1.0, 1.0); glVertex3f(100.0, 120.0, -70.0);
-	glTexCoord2f(0.0, 1.0); glVertex3f(-100.0, 120.0, -70.0);
+	glTexCoord2f(0.0, 0.0); glVertex3f(-290.0, -230, -270.0);
+	glTexCoord2f(1.0, 0.0); glVertex3f(290.0, -230, -270.0);
+	glTexCoord2f(1.0, 1.0); glVertex3f(220.0, 130.0, -200.0);
+	glTexCoord2f(0.0, 1.0); glVertex3f(-220.0, 130.0, -200.0);
 	glEnd();
 
 
@@ -611,8 +728,8 @@ void drawScene(void)
 	glBindTexture(GL_TEXTURE_2D, texture[filter]);
 	glBegin(GL_POLYGON);
 	glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, 10.0, 100.0);
-	glTexCoord2f(8.0, 0.0); glVertex3f(100.0, 10.0, 100.0);
-	glTexCoord2f(8.0, 8.0); glVertex3f(100.0, 10.0, -100.0);
+	glTexCoord2f(8.0, 0.0); glVertex3f(100.0,  10.0, 100.0);
+	glTexCoord2f(8.0, 8.0); glVertex3f(100.0,  10.0, -100.0);
 	glTexCoord2f(0.0, 8.0); glVertex3f(-100.0, 10, -100.0);
 	glEnd();
 
